@@ -6,16 +6,6 @@ format:
     code-fold: show
 ---
 
-
-TODO
-
-- colocar base simulada no github
-- leitura de dados no github
-- revisar scripts em R
-- montar scripts em python com sns e outras coisas de interesse (média móvel e descritivas)
-- fazer o prophet funcionar no python
-
-
 Vamos agora brincar de séries temporais.
 
 Um problema que precisamos enfrentar com séries temporais é que como os dados têm uma ordem, precisamos de alguma forma ter essa ordem escrita na base.
@@ -50,6 +40,12 @@ dados <- data.frame(
 
 plot(dados)
 
+```
+
+```{r}
+# mesma base de dados, mas lendo do github
+dados <- readr::read_csv("https://github.com/padsInsper/202307-fa/raw/main/dados_lab01.csv")
+plot(dados)
 ```
 
 ```{r}
@@ -175,8 +171,6 @@ feasts::autoplot(dados_tsibble, vendas)
 
 ## Python
 
-Vocês me ensinem!!!
-
 ```{python}
 import pandas as pd
 from datetime import timedelta
@@ -184,30 +178,24 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 dados = pd.read_csv(
-  "https://raw.githubusercontent.com/padsInsper/202234-fa/main/material/lab01/serie_temporal.csv"
+  "https://github.com/padsInsper/202307-fa/raw/main/dados_lab01.csv"
 )
 
 dados.plot()
-
 dados.info()
 
-dates = pd.date_range("2005-06-01", periods = 8187, freq = "D")
+dates = pd.date_range("2005-06-01", periods = 48, freq = "M")
 
-serie_dados = pd.Series(dados['y'].array, index = dates)
+serie_dados = pd.Series(dados['vendas'].array, index = dates)
 serie_dados.plot()
 ```
 
 
 ```{python}
-_ = serie_dados.plot()
-plt.show()
+sns.lineplot(data = serie_dados)
+# set x axis label 45 degrees
+plt.xticks(rotation=45, ha='right')
 ```
-
-```{python}
-
-```
-
-
 
 # Estatísticas básicas
 
@@ -222,33 +210,29 @@ plot(dec_sum)
 plot(dec_mult)
 
 set.seed(7)
-dados <- tsibbledata::aus_retail |>
+dados_turnover <- tsibbledata::aus_retail |>
   dplyr::filter(
-    `Series ID` == sample(`Series ID`, 1)
+    `Series ID` %in% sample(`Series ID`, 2)
   ) |>
   dplyr::select(Month, Turnover)
 
-x <- ts(dados, start = c(1982, 4), frequency = 12)
+x <- ts(dados_turnover, start = c(1982, 4), frequency = 12)
 plot(decompose(x[,"Turnover"], "multiplicative"))
 plot(decompose(x[,"Turnover"]))
-
 ```
-
-
 
 $$Y = T + S + e$$
 
 $$log(Y) = log(T) + log(S) + log(e)$$
 
 ```{r}
-
 dados_exemplos <- data.frame(
   mes = 1:48,
   vendas = arima.sim(list(order = c(1,0,0), ar = c(0.8)), n = 48)
 )
 
 dados_ts_exemplos <- ts(dados_exemplos)
-acf(diff(dados_ts_exemplos[,"vendas"]))
+acf(dados_ts_exemplos[,"vendas"])
 ```
 
 ```{r}
@@ -350,8 +334,6 @@ res = sm.tsa.seasonal_decompose(serie_dados)
 resplot = res.plot()
 plt.show()
 ```
-
-
 
 ## Exercícios
 
@@ -456,6 +438,11 @@ future <- make_future_dataframe(m, periods = 12, freq = "month")
 forecast <- predict(m, future)
 plot(m, forecast)
 
+prophet::prophet_plot_components(m, forecast)
+```
+
+```{r}
+
 prophet::generated_holidays |>
   dplyr::filter(country == "BR", year == "2022")
 
@@ -473,11 +460,13 @@ prophet_plot_components(m, forecast)
 
 ```{python}
 from prophet import Prophet
-import pystan
+import pandas as pd
 
-dados = pd.read_csv("dados_lab01.csv")
+dados = pd.read_csv("https://github.com/padsInsper/202307-fa/raw/main/serie_temporal.csv")
+```
 
-m = Prophet()
+```{python}
+m = Prophet(stan_backend="CMDSTANPY")
 m.fit(dados)
 
 # make future dataframe
