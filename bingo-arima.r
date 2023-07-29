@@ -2,17 +2,21 @@
 
 # gerando os dados --------------------------------------------------------
 
-ar <- sample(0:1,1)
-ma <- sample(0:1,1)
-dif <- sample(0:1,1)
+ar <- sample(0:1, 1)
+ma <- sample(0:1, 1)
+dif <- sample(0:1, 1)
 
-ar_parm <- runif(ar, min = .8, max = .9)
-ma_parm <- runif(ma, min = .8, max = .9)
+ar <- 1
+dif <- 0
+ma <- 1
+
+ar_parm <- runif(ar, min = .3, max = .4)
+ma_parm <- runif(ma, min = .3, max = .4)
 
 dados <- data.frame(
   mes = 1:(300 + dif),
   vendas = arima.sim(list(
-    order = c(ar,dif,ma),
+    order = c(ar, dif, ma),
     ma = ma_parm,
     ar = ar_parm
   ), n = 300)
